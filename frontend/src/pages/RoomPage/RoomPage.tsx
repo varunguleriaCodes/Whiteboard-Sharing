@@ -1,9 +1,41 @@
-import React, { useState } from "react";
+import { useRef, useState } from "react";
 import "./roompage.css"
 import WhiteBoard from "../../components/Whiteboard/whiteboard";
 const RoomPage=()=>{
+    const canvasRef = useRef(null)
+    const ctx=useRef(null)
     const [tool,setTool]=useState("pencil")
     const [color,setColor]=useState("black")
+    const [elements,setElements]=useState([])
+    const [history,setHistory]=useState([])
+
+    const handleClearCanvas=()=>{
+        const canvas=canvasRef.current
+        const ctxRef=canvas.getContext("2d")
+        ctxRef.fillRect="white"
+        ctxRef.clearRect(
+            0,
+            0,
+            canvasRef.current.width,
+            canvasRef.current.height
+          );
+        setElements([])
+    }
+
+    const undo=()=>{
+        console.log(history)
+        console.log(elements)
+        if(elements.length==1)
+        {
+            handleClearCanvas()
+        }
+        setHistory((prevHistory)=>[...prevHistory,elements[elements.length-1]]);
+        setElements((prevElements)=>prevElements.slice(0,prevElements.length-1))
+    }
+    const redo=()=>{
+        setElements((prevElements)=>[...prevElements,history[history.length-1]]);
+        setHistory((prevHistory)=>prevHistory.slice(0,prevHistory.length-1))       
+    }
     return (
         <div className="row">
             <h1 className="text-center py-5">White Board Sharing App <span className="text-primary">[Users Online:0]</span></h1>  
@@ -36,15 +68,22 @@ const RoomPage=()=>{
                     </div>
                 </div>
                 <div className="col-md-3 d-flex gap-2">
-                    <button className="btn btn-primary mt-1">Undo</button>
-                    <button className="btn btn-outline-primary mt-1">Redo</button>
+                    <button className="btn btn-primary mt-1" disabled={elements.length===0} onClick={()=>{undo()}}>Undo</button>
+                    <button className="btn btn-outline-primary mt-1" disabled={history.length<1}
+                    onClick={()=>{redo()}}>Redo</button>
                 </div>
                 <div className="col-md-2">
-                    <button className="btn btn-danger">Clear Canvas</button>
+                    <button className="btn btn-danger" onClick={handleClearCanvas}>Clear Canvas</button>
                 </div>
             </div>
             <div className="col-md-10 mx-auto mt-4 canvas-box">
-            <WhiteBoard/>
+            <WhiteBoard
+          canvasRef={canvasRef}
+          ctx={ctx}
+          color={color}
+          setElements={setElements}
+          elements={elements}
+          tool={tool}/>
             </div>        
         </div>
     )
